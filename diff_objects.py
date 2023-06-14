@@ -27,13 +27,21 @@ class CLIP:
         outputs = self.model(**inputs)
         logits_per_image = outputs.logits_per_image  # image-text similarity score
         probs = logits_per_image.softmax(dim=1)  # softmax to get the label probabilities
-        text_embeddings = outputs.text_embeds.detach().numpy()
         image_embeddings = outputs.image_embeds.detach().numpy()
-        return (np.reshape(image_embeddings, (1, 512)), np.reshape(text_embeddings,(1, 512)))
+        text_embeddings = outputs.text_embeds.detach().numpy()
+        for i in range(len(image_embeddings)):
+                image_embeddings[i] = np.reshape(image_embeddings[i], (1, 512))
+        for i in range(len(text_embeddings)):
+                text_embeddings[i] = np.reshape(text_embeddings[i], (1, 512))
+        return (image_embeddings, text_embeddings)
 
 
+
+# CLIP needs atleast one image and one text in order to create this joint modality 
+# space. As per our experiement, we aim to mainly deal with one modality? 
 
 clip = CLIP()
+
 url = "http://images.cocodataset.org/val2017/000000039769.jpg"
 image = Image.open(requests.get(url, stream=True).raw)
 text = ["a photo of a cat"]
