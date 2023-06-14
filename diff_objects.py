@@ -1,10 +1,9 @@
 from PIL import Image
 import numpy as np
-from sklearn.decomposition import PCA
+import requests
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 import torch
-import requests
 from transformers import CLIPProcessor, CLIPModel
 
 
