@@ -1,5 +1,6 @@
 from PIL import Image
 import numpy as np
+import glob
 import requests
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
@@ -40,11 +41,30 @@ class CLIP:
 # CLIP needs atleast one image and one text in order to create this joint modality 
 # space. As per our experiement, we aim to mainly deal with one modality? 
 
-clip = CLIP()
+# Once we graph via t-SNE/PCA/LCA to use clustering metrics, need to define the clusters.
+# Does it make sense to manually define clusters based off what visually groups?
 
-url = "http://images.cocodataset.org/val2017/000000039769.jpg"
-image = Image.open(requests.get(url, stream=True).raw)
-text = ["a photo of a cat"]
 
-image_embeddings, text_embeddings = clip.embeddings(image, text)
+def main(images_dir):
+    clip = CLIP()
 
+    # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+    # image = Image.open(requests.get(url, stream=True).raw)
+    images = []
+    for img in glob.glob(images_dir + "/*"):
+         print(img)
+         images.append(Image.open(img))
+    print(images)
+    text = ["a photo of a cat"]
+    image_embeddings, text_embeddings = clip.embeddings(images, text)
+
+
+
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('images_dir', type=str, help= "Path to directory of image data")
+    args = parser.parse_args()
+    main(**vars(args))
