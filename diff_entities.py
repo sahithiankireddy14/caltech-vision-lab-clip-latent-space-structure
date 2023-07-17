@@ -36,15 +36,19 @@ def main(images_dir, labels_csv, dataset_name, classes, preprocess_image_data, n
             image_entity.set_embeddings(clip.encode_image(images))
             image_entity_objects.append(image_entity)
 
-    spectral_clustering(image_entity_objects)
+    spectral_clustering(pca(image_entity_objects), len(image_entity_objects))
 
 
-def spectral_clustering(image_entity_objects):
-    # TODO: run PCA and then apply spectral clustering 
-    n_clusters = len(image_entity_objects) 
-    pca_all = []
-    for class_obj in image_entity_objects:
-        pca_all.append(PCA(n_components=2).fit_transform(class_obj.embeddings))
+
+def pca(image_entity_objects):
+    pca_total = PCA(n_components=2).fit_transform(image_entity_objects[0].embeddings)
+    for i in range(1, len(image_entity_objects)):
+        pca_total = np.concatenate((pca_total, PCA(n_components=2).fit_transform(image_entity_objects[i].embeddings)), axis = 0)
+
+def spectral_clustering(values, n_clusters):
+    # TODO
+    return
+
 
 
 
