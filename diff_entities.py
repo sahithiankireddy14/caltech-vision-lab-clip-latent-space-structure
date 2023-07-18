@@ -4,6 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import SpectralClustering
+from sklearn.metrics.cluster import fowlkes_mallows_score, normalized_mutual_info_score, homogeneity_score
 from random import sample 
 from clip import CLIP
 
@@ -14,10 +15,13 @@ class ImageEntity:
     def __init__(self, name):
         self.name = name 
         self.embeddings = None
+        self.count = 0
     
-
     def set_embeddings(self, embeddings):
         self.embeddings = embeddings
+
+    def set_count(self, count):
+        self.count = count
     
 
 def main(images_dir, labels_csv, dataset_name, classes, preprocess_image_data, num_images, texts=None):
@@ -34,26 +38,53 @@ def main(images_dir, labels_csv, dataset_name, classes, preprocess_image_data, n
             for img in sample(glob.glob(images_dir + "/"+ directory + "/*.JPEG"), num_images):
                  images.append(Image.open(img))
             image_entity.set_embeddings(clip.encode_image(images))
+            image_entity.set_count(num_images)
             image_entity_objects.append(image_entity)
 
-    spectral_clustering(pca(image_entity_objects), len(image_entity_objects))
-
-
+    spectral_clustering(pca(image_entity_objects), len(image_entity_objects), image_entity_objects)
+  
 
 def pca(image_entity_objects):
-    pca_total = PCA(n_components=2).fit_transform(image_entity_objects[0].embeddings)
+    pca_total = PCA(n_components=10).fit_transform(image_entity_objects[0].embeddings)
     for i in range(1, len(image_entity_objects)):
-        pca_total = np.concatenate((pca_total, PCA(n_components=2).fit_transform(image_entity_objects[i].embeddings)), axis = 0)
-
-def spectral_clustering(values, n_clusters):
-    # TODO
-    return
+        pca_total = np.concatenate((pca_total, PCA(n_components=10).fit_transform(image_entity_objects[i].embeddings)), axis = 0)
+    return pca_total
 
 
-
-
+def spectral_clustering(values, n_clusters, image_entity_objects): 
+    labels = [obj.name for obj in image_entity_objects]
     
+
+    spectral_clustering = SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0)
+    predicted_clusters = spectral_clustering.fit_predict(values)
+    print(predicted_clusters)
+
+    scatter = plt.scatter(values[:, 0], values[:, 1], s = 10, c=predicted_clusters, cmap='viridis')
+    plt.legend(handles=scatter.legend_elements()[0], labels=labels, title="Classes")
+    plt.title('Spectral Clustering after PCA')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.savefig("spectral_clustering_on_pca.png", format='png')
+
+    evaluate(image_entity_objects, predicted_clusters)
+
+def evaluate(image_entity_objects, predicted_clusters):
+    ground_truth = []
+    count = 0
+    for entity in image_entity_objects:
+        ground_truth += entity.count * [count]
+        count = count + 1
+
+    # TODO: why are the clustering metrics so low for visually well formed clusters
+    print(fowlkes_mallows_score(ground_truth, predicted_clusters))
+    print(normalized_mutual_info_score(ground_truth, predicted_clusters))
+    print(homogeneity_score(ground_truth, predicted_clusters))
+
+
+
+
 def process_imagenet(images_dir, num_images):
+    # TODO: fix count 
     image_entity_objects = []
     class_subdirectories = {"Cat":["n02123045", "n02123159", "n02123394", "n02123597", "n02124075"], 
               "Dog": ["n02085936","n02097474", "n02105641",  "n02105855", "n02106030" ],
@@ -71,6 +102,7 @@ def process_imagenet(images_dir, num_images):
         for directory in class_subdirectories[class_name]:
             for img in sample(glob.glob(images_dir + "/"+ directory + "/*.JPEG"), int(num_images / len(class_subdirectories[class_name]))):
                     images.append(Image.open(img))
+                    image_entity.set_count(image_entity.count + 1)
         image_entity.set_embeddings(clip.encode_image(images))
         image_entity_objects.append(image_entity)
     return image_entity_objects            
@@ -100,7 +132,7 @@ if __name__ == '__main__':
     parser.add_argument("--preprocess_image_data", action="store_true", help="set flag if the desired class names don't match the dataset labels")
     parser.add_argument("num_images", type = int, help="number of images to pull from each class / subdirectory")
     
-
+    
     parser.add_argument( "--texts", nargs="*", type=str, default=[], help="texts to encode")
    
 
