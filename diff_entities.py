@@ -45,9 +45,9 @@ def main(images_dir, labels_csv, dataset_name, classes, preprocess_image_data, n
   
 
 def pca(image_entity_objects):
-    pca_total = PCA(n_components=10).fit_transform(image_entity_objects[0].embeddings)
+    pca_total = PCA(n_components=2).fit_transform(image_entity_objects[0].embeddings)
     for i in range(1, len(image_entity_objects)):
-        pca_total = np.concatenate((pca_total, PCA(n_components=10).fit_transform(image_entity_objects[i].embeddings)), axis = 0)
+        pca_total = np.concatenate((pca_total, PCA(n_components=2).fit_transform(image_entity_objects[i].embeddings)), axis = 0)
     return pca_total
 
 
@@ -75,10 +75,10 @@ def evaluate(image_entity_objects, predicted_clusters):
         ground_truth += entity.count * [count]
         count = count + 1
 
-    # TODO: why are the clustering metrics so low for visually well formed clusters
-    print(fowlkes_mallows_score(ground_truth, predicted_clusters))
-    print(normalized_mutual_info_score(ground_truth, predicted_clusters))
-    print(homogeneity_score(ground_truth, predicted_clusters))
+    # TODO: why are the clustering metrics so low for visually well formed clusters?
+    print("Fowlkes Mallows: "  + str(fowlkes_mallows_score(ground_truth, predicted_clusters)))
+    print("NMI: "+  str(normalized_mutual_info_score(ground_truth, predicted_clusters)))
+    print("Homogeneity: " + str(homogeneity_score(ground_truth, predicted_clusters)))
 
 
 
