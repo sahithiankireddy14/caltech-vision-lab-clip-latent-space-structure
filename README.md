@@ -1,1 +1,1 @@
-## Uncovering entity and attribute structure in vision-language embeddings
+## Uncovering structure in vision-language embeddings
