@@ -1,3 +1,3 @@
 ## Uncovering structure in vision-language embeddings
 
-Work done through a SURF in the Caltech Computational Vision Lab
+Entity–attribute representation patterns in CLIP’s multimodal embeddings to guide improvements for domain-specific model behavior
